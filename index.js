@@ -27,6 +27,16 @@ async function init() {
     // Show banner if no Wisp URL is set
     wispBanner.style.display = "block";
   }
+
+  // REGISTER TRANSPORT WITH BARE-MUX / SCRAMJET
+  // This directs Scramjet to route TLS handshakes through Wisp instead of WASM libcurl
+  if (window.BareMux) {
+    const connection = new window.BareMux.BareMuxConnection("/scram/baremux/worker.js");
+    await connection.setTransport("/scram/epoxy/index.js", [{ wisp: window.WISP_URL }]);
+  } else if (controller && typeof controller.setWisp === "function") {
+    // Fallback for Scramjet builds with built-in setWisp method
+    await controller.setWisp(window.WISP_URL);
+  }
   
   const cachePlugin = new $scramjetUtils.HttpCachePlugin();
   const urlWatcher = new $scramjetUtils.UrlWatcherPlugin((url) => {
